@@ -12,7 +12,7 @@ to make sure that you really know what you are doing.
 Moreover, when it comes time to customize models,
 defining our own layers, loss functions, etc.,
 understanding how things work under the hood will prove handy.
-In this section, we will rely only on `ndarray` and auto differentiation.
+In this section, we will rely only on tensors and auto differentiation.
 Afterwards, we will introduce a more compact implementation,
 taking advantage of framework's bells and whistles.
 To start off, we import the few required packages.
@@ -397,7 +397,7 @@ for epoch in range(num_epochs):
     # and y respectively
     for X, y in data_iter(batch_size, features, labels):
         l = loss(net(X, w, b), y)  # Minibatch loss in X and y
-        l.mean().backward()  # Compute gradient on l with respect to [w,b]
+        l.sum().backward()  # Compute gradient on l with respect to [w,b]
         sgd([w, b], lr, batch_size)  # Update parameters using their gradient
     with torch.no_grad():
         train_l = loss(net(features, w, b), labels)
@@ -444,7 +444,7 @@ that lead to accurate prediction.
 ## Summary
 
 We saw how a deep network can be implemented
-and optimized from scratch, using just `ndarray` and auto differentiation,
+and optimized from scratch, using just tensors and auto differentiation,
 without any need for defining layers, fancy optimizers, etc.
 This only scratches the surface of what is possible.
 In the following sections, we will describe additional models
