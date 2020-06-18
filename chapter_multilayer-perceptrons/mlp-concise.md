@@ -18,15 +18,21 @@ import torch
 from torch import nn
 ```
 
+```{.python .input}
+#@tab tensorflow
+from d2l import tensorflow as d2l
+import tensorflow as tf
+```
+
 ## The Model
 
-As compared to our gluon implementation 
+As compared to our concise implementation
 of softmax regression implementation
 (:numref:`sec_softmax_gluon`),
-the only difference is that we add 
-*two* fully-connected layers 
+the only difference is that we add
+*two* fully-connected layers
 (previously, we added *one*).
-The first is our hidden layer, 
+The first is our hidden layer,
 which contains *256* hidden units
 and applies the ReLU activation function.
 The second is our output layer.
@@ -43,7 +49,7 @@ net.initialize(init.Normal(sigma=0.01))
 class Reshape(torch.nn.Module):
     def forward(self, x):
         return x.view(-1,784)
-    
+
 net = nn.Sequential(Reshape(),
                     nn.Linear(784, 256),
                     nn.ReLU(),
@@ -56,9 +62,18 @@ def init_weights(m):
 net.apply(init_weights)
 ```
 
+
+```{.python .input}
+#@tab tensorflow
+net = tf.keras.models.Sequential([
+	tf.keras.layers.Flatten(),
+	tf.keras.layers.Dense(256, activation='relu'),
+	tf.keras.layers.Dense(10, activation='softmax')])
+```
+
 The training loop is *exactly* the same
 as when we implemented softmax regression.
-This modularity enables us to separate 
+This modularity enables us to separate
 matters concerning the model architecture
 from orthogonal considerations.
 
@@ -79,9 +94,18 @@ trainer = torch.optim.SGD(net.parameters(), lr=lr)
 d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
 ```
 
+```{.python .input}
+#@tab tensorflow
+num_epochs, lr, batch_size = 10, 0.5, 256
+train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
+loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+trainer = tf.keras.optimizers.SGD(learning_rate=lr)
+d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
+```
+
 ## Exercises
 
-1. Try adding different numbers of hidden layers. What setting (keeping other parameters and hyperparameters constant) works best? 
+1. Try adding different numbers of hidden layers. What setting (keeping other parameters and hyperparameters constant) works best?
 1. Try out different activation functions. Which ones work best?
 1. Try different schemes for initializing the weights. What method works best?
 
@@ -92,4 +116,8 @@ d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
 
 :begin_tab:`pytorch`
 [Discussions](https://discuss.d2l.ai/t/95)
+:end_tab:
+
+:begin_tab:`tensorflow`
+[Discussions](https://discuss.d2l.ai/t/262)
 :end_tab:

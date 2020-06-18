@@ -21,6 +21,12 @@ import torch
 from torch import nn
 ```
 
+```{.python .input}
+#@tab tensorflow
+from d2l import tensorflow as d2l
+import tensorflow as tf
+```
+
 Let us stick with the Fashion-MNIST dataset
 and keep the batch size at $256$ as in the last section.
 
@@ -31,6 +37,12 @@ train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
 
 ```{.python .input}
 #@tab pytorch
+batch_size = 256
+train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
+```
+
+```{.python .input}
+#@tab tensorflow
 batch_size = 256
 train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
 ```
@@ -70,6 +82,14 @@ def init_weights(m):
         torch.nn.init.normal_(m.weight, std=0.01)
 
 net.apply(init_weights)
+```
+
+```{.python .input}
+#@tab tensorflow
+net = tf.keras.models.Sequential()
+net.add(tf.keras.layers.Flatten(input_shape=(28, 28)))
+weight_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01)
+net.add(tf.keras.layers.Dense(10, kernel_initializer=weight_initializer))
 ```
 
 ## The Softmax
@@ -130,7 +150,7 @@ We will want to keep the conventional softmax function handy
 in case we ever want to evaluate the probabilities output by our model.
 But instead of passing softmax probabilities into our new loss function,
 we will just pass the logits and compute the softmax and its log
-all at once inside the softmax_cross_entropy loss function,
+all at once inside the cross entropy loss function,
 which does smart things like the log-sum-exp trick ([see on Wikipedia](https://en.wikipedia.org/wiki/LogSumExp)).
 
 ```{.python .input}
@@ -140,6 +160,11 @@ loss = gluon.loss.SoftmaxCrossEntropyLoss()
 ```{.python .input}
 #@tab pytorch
 loss = nn.CrossEntropyLoss()
+```
+
+```{.python .input}
+#@tab tensorflow
+loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 ```
 
 ## Optimization Algorithm
@@ -158,17 +183,17 @@ trainer = gluon.Trainer(net.collect_params(), 'sgd', {'learning_rate': 0.1})
 trainer = torch.optim.SGD(net.parameters(), lr=0.1)
 ```
 
+```{.python .input}
+#@tab tensorflow
+trainer = tf.keras.optimizers.SGD(learning_rate=.1)
+```
+
 ## Training
 
 Next we call the training function defined in the last section to train a model.
 
 ```{.python .input}
-num_epochs = 10
-d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
-```
-
-```{.python .input}
-#@tab pytorch
+#@tab all
 num_epochs = 10
 d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
 ```
@@ -176,7 +201,7 @@ d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, trainer)
 As before, this algorithm converges to a solution
 that achieves an accuracy of 83.7%,
 albeit this time with fewer lines of code than before.
-Note that in many cases, Gluon takes additional precautions
+Note that in many cases, the deep learning framework takes additional precautions
 beyond these most well-known tricks to ensure numerical stability,
 saving us from even more pitfalls that we would encounter
 if we tried to code all of our models from scratch in practice.
@@ -192,4 +217,8 @@ if we tried to code all of our models from scratch in practice.
 
 :begin_tab:`pytorch`
 [Discussions](https://discuss.d2l.ai/t/53)
+:end_tab:
+
+:begin_tab:`tensorflow`
+[Discussions](https://discuss.d2l.ai/t/260)
 :end_tab:
