@@ -91,9 +91,9 @@ from d2l import torch as d2l
 import torch
 import torch.nn as nn
 
-T = 1000        # Generate a total of 1000 points
+T = 1000  # Generate a total of 1000 points
 time = torch.arange(0.0, T)
-x = torch.sin(0.01 * time) + 0.2*torch.randn(T)
+x = torch.sin(0.01 * time) + 0.2 * torch.randn(T)
 d2l.plot(time, [x])
 ```
 
@@ -101,16 +101,14 @@ Next we need to turn this time series into features and labels that the network 
 
 ```{.python .input}
 tau = 4
-features = np.zeros((T-tau, tau))
+features = d2l.zeros((T-tau, tau))
 for i in range(tau):
     features[:, i] = x[i: T-tau+i]
 labels = x[tau:]
 
 batch_size, n_train = 16, 600
-train_iter = d2l.load_array((features[:n_train], labels[:n_train]),
+train_iter = d2l.load_array((features[:n_train], labels[:n_train]), 
                             batch_size, is_train=True)
-test_iter = d2l.load_array((features[:n_train], labels[:n_train]),
-                           batch_size, is_train=False)
 
 # Vanilla MLP architecture
 def get_net():
@@ -127,16 +125,15 @@ loss = gluon.loss.L2Loss()
 ```{.python .input}
 #@tab pytorch
 tau = 4
-features = torch.zeros((T-tau, tau))
+features = d2l.zeros((T-tau, tau))
 for i in range(tau):
     features[:, i] = x[i: T-tau+i]
 labels = x[tau:]
 
 batch_size, n_train = 16, 600
-train_iter = d2l.load_array((features[:n_train], labels[:n_train]),
+train_iter = d2l.load_array((features[:n_train], 
+                             labels[:n_train].reshape(-1, 1)),
                             batch_size, is_train=True)
-test_iter = d2l.load_array((features[:n_train], labels[:n_train]),
-                           batch_size, is_train=False)
 
 # Function for initializing the weights of net
 def init_weights(m):
@@ -167,8 +164,8 @@ def train_net(net, train_iter, loss, epochs, lr):
                 l = loss(net(X), y)
             l.backward()
             trainer.step(batch_size)
-        print('epoch %d, loss: %f' % (
-            epoch, d2l.evaluate_loss(net, train_iter, loss)))
+        print(f'epoch {epoch:d}, '
+              f'loss: {d2l.evaluate_loss(net, train_iter, loss):f}')
 
 net = get_net()
 train_net(net, train_iter, loss, 10, 0.01)
@@ -181,11 +178,11 @@ def train_net(net, train_iter, loss, epochs, lr):
     for epoch in range(1, epochs + 1):
         for X, y in train_iter:
             trainer.zero_grad()
-            l = loss(net(X), y.reshape(-1, 1))
+            l = loss(net(X), y)
             l.backward()
             trainer.step()
-        print('epoch %d, loss: %f' % (
-            epoch, d2l.evaluate_loss(net, train_iter, loss)))
+        print(f'epoch {epoch:d}, '
+              f'loss: {d2l.evaluate_loss(net, train_iter, loss):f}')
 
 net = get_net()
 train_net(net, train_iter, loss, 10, 0.01)
@@ -193,7 +190,7 @@ train_net(net, train_iter, loss, 10, 0.01)
 
 ## Predictions
 
-Since both training and test loss are small, we would expect our model to work well. Let us see what this means in practice. The first thing to check is how well the model is able to predict what happens in the next timestep.
+Since training loss is small, we would expect our model to work well. Let us see what this means in practice. The first thing to check is how well the model is able to predict what happens in the next timestep.
 
 ```{.python .input}
 estimates = net(features)
@@ -219,7 +216,7 @@ x_{603} & = f(x_{602}, \ldots, x_{599}).
 In other words, we will have to use our own predictions to make future predictions. Let us see how well this goes.
 
 ```{.python .input}
-predictions = np.zeros(T)
+predictions = d2l.zeros(T)
 predictions[:n_train] = x[:n_train]
 for i in range(n_train, T):
     predictions[i] = net(
@@ -231,7 +228,7 @@ d2l.plot([time, time[tau:], time[n_train:]],
 
 ```{.python .input}
 #@tab pytorch
-predictions = torch.zeros(T)
+predictions = d2l.zeros(T)
 predictions[:n_train] = x[:n_train]
 for i in range(n_train, T):
     predictions[i] = net(
@@ -248,7 +245,7 @@ Let us verify this observation by computing the $k$-step predictions on the enti
 ```{.python .input}
 k = 33  # Look up to k - tau steps ahead
 
-features = np.zeros((k, T-k))
+features = d2l.zeros((k, T-k))
 for i in range(tau):  # Copy the first tau features from x
     features[i] = x[i:T-k+i]
 
@@ -264,7 +261,7 @@ d2l.plot([time[i:T-k+i] for i in steps], [features[i] for i in steps],
 #@tab pytorch
 k = 33  # Look up to k - tau steps ahead
 
-features = torch.zeros((k, T-k))
+features = d2l.zeros((k, T-k))
 for i in range(tau):  # Copy the first tau features from x
     features[i] = x[i:T-k+i]
 

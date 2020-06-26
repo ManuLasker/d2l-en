@@ -144,7 +144,7 @@ def net(X):
 #@tab pytorch
 def net(X):
     X = X.reshape((-1, num_inputs))
-    H = relu(X@W1 + b1)   # Here '@' stands for dot product operation
+    H = relu(X@W1 + b1) # Here '@' stands for dot product operation
     return (H@W2 + b2)
 ```
 
@@ -153,7 +153,7 @@ def net(X):
 def net(X):
     X = tf.reshape(X, shape=[-1, num_inputs])
     H = relu(tf.matmul(X, W1) + b1)
-    return tf.math.softmax(tf.matmul(H, W2) + b2)
+    return tf.matmul(H, W2) + b2
 ```
 
 ## The Loss Function
@@ -162,7 +162,7 @@ To ensure numerical stability,
 and because we already implemented
 the softmax function from scratch
 (:numref:`sec_softmax_scratch`),
-we leverage Gluon's integrated function
+we leverage the integrated function from high-level APIs
 for calculating the softmax and cross-entropy loss.
 Recall our earlier discussion of these intricacies 
 (:numref:`sec_mlp`).
@@ -182,7 +182,8 @@ loss = nn.CrossEntropyLoss()
 ```{.python .input}
 #@tab tensorflow
 def loss(y_hat, y):
-    return tf.losses.sparse_categorical_crossentropy(y, y_hat)
+    return tf.losses.sparse_categorical_crossentropy(
+        y, y_hat, from_logits=True)
 ```
 
 ## Training

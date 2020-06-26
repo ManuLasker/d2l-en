@@ -61,7 +61,6 @@ net(x)
 import tensorflow as tf
 import numpy as np
 
-
 net = tf.keras.models.Sequential([
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(4, activation=tf.nn.relu),
@@ -76,32 +75,30 @@ net(x)
 
 Let us start with how to access parameters
 from the models that you already know.
-When a model is defined via the Sequential class,
+When a model is defined via the `Sequential` class,
 we can first access any layer by indexing 
 into the model as though it were a list.
 Each layer's parameters are conveniently 
 located in its attribute. 
-We can inspect the parameters of the `net` defined above as a dictionary.
+We can inspect the parameters of the second fully-connected layer as follows.
 
 ```{.python .input}
-print(net[0].params)
 print(net[1].params)
 ```
 
 ```{.python .input}
 #@tab pytorch
-print(net[2].state_dict())  
+print(net[2].state_dict())
 ```
 
 ```{.python .input}
 #@tab tensorflow
-print(net.layers[2].weights)  
+print(net.layers[2].weights)
 ```
 
 The output tells us a few important things.
-First, each fully-connected layer 
-contains two parameters, e.g., 
-`weight` and `bias` (may with prefix),
+First, this fully-connected layer 
+contains two parameters, 
 corresponding to that layer's 
 weights and biases, respectively.
 Both are stored as single precision floats.
@@ -114,18 +111,14 @@ even in a network containing hundreds of layers.
 ### Targeted Parameters
 
 Note that each parameter is represented
-as an instance of the `Parameter` class.
+as an instance of the parameter class.
 To do anything useful with the parameters,
 we first need to access the underlying numerical values. 
 There are several ways to do this.
 Some are simpler while others are more general.
-To begin, given a layer, 
-we can access one of its parameters 
-via the `bias` or `weight` attributes, which returns an `Parameter` instance
-and further access that parameter's value
-via its `data` method.
 The following code extracts the bias
-from the second neural network layer.
+from the second neural network layer, which returns a parameter class instance, and 
+and further access that parameter's value.
 
 ```{.python .input}
 print(type(net[1].bias))
@@ -142,31 +135,27 @@ print(net[2].bias.data)
 
 ```{.python .input}
 #@tab tensorflow
-print(type(net.layers[2].weights[0]))
-print(net.layers[2].weights[0])
-print(net.layers[2].weights[0].numpy())
+print(type(net.layers[2].weights[1]))
+print(net.layers[2].weights[1])
+print(tf.convert_to_tensor(net.layers[2].weights[1]))
 ```
 
+:begin_tab:`mxnet,pytorch`
 Parameters are complex objects,
 containing data, gradients,
 and additional information.
 That's why we need to request the data explicitly.
 
-
 In addition to `data`, each `Parameter` also provides a `grad` method for accessing the gradient. Because we have not invoked backpropagation for this network yet, it is in its initial state.
+:end_tab:
 
 ```{.python .input}
-net[0].weight.grad()
+net[1].weight.grad()
 ```
 
 ```{.python .input}
 #@tab pytorch
-net[0].weight.grad == None
-```
-
-```{.python .input}
-#@tab tensorflow
-net.layers[0].weights == []
+net[2].weight.grad == None
 ```
 
 ### All Parameters at Once
@@ -174,34 +163,25 @@ net.layers[0].weights == []
 When we need to perform operations on all parameters,
 accessing them one-by-one can grow tedious.
 The situation can grow especially unwieldy
-when we work with more complex blocks, (e.g., nested Blocks),
+when we work with more complex blocks, (e.g., nested blocks),
 since we would need to recurse 
-
-
 through the entire tree in to extract
-each sub-block's parameters.
+each sub-block's parameters. Below we demonstrate accessing the parameters of the first fully-connected layer versus accessing all layers.
 
 ```{.python .input}
-# parameters only for the first layer
 print(net[0].collect_params())
-# parameters of the entire network
 print(net.collect_params())
 ```
 
 ```{.python .input}
 #@tab pytorch
-# parameters only for the first layer
-print(net[0].state_dict())
-# parameters of the entire network
+print(net[1].state_dict())
 print(net.state_dict())
 ```
 
-
 ```{.python .input}
 #@tab tensorflow
-# parameters only for the first layer
 print(net.layers[1].weights)
-# parameters of the entire network
 print(net.get_weights())
 ```
 
@@ -219,21 +199,6 @@ net.state_dict()['2.bias'].data
 ```{.python .input}
 #@tab tensorflow
 net.get_weights()[1]
-```
-
-:begin_tab:`mxnet`
-Throughout the book we encounter Blocks 
-that name their sub-Blocks in various ways. 
-Sequential simply numbers them.
-We can exploit this naming convention by leveraging
-one clever feature of `collect_params`:
-it allows us to filter the parameters 
-returned by using regular expressions.
-:end_tab:
-
-```{.python .input}
-print(net.collect_params('.*weight'))
-print(net.collect_params('dense0.*'))
 ```
 
 ### Collecting Parameters from Nested Blocks
@@ -344,29 +309,29 @@ rgnet.layers[0].layers[1].layers[1].weights[1]
 
 Now that we know how to access the parameters,
 let us look at how to initialize them properly.
-We discussed the need for initialization in :numref:`sec_numerical_stability`. 
+We discussed the need for initialization in :numref:`sec_numerical_stability`.
+The framework provides default random initializations to its layers. 
+However, we often want to initialize our weights
+according to various other protocols. The framework provides most commonly 
+used protocols, and also allows to create a customer initializer.
 
 :begin_tab:`mxnet`
 By default, MXNet initializes weight matrices
 uniformly by drawing from $U[-0.07, 0.07]$ 
-and the bias parameters are all set to $0$.
-However, we will often want to initialize our weights
-according to various other protocols. 
 MXNet's `init` module provides a variety 
 of preset initialization methods.
-If we want to create a custom initializer,
-we need to do some extra work.
 :end_tab:
 
 :begin_tab:`pytorch`
 By default, PyTorch initializes weight and bias matrices
 uniformly by drawing from a range that is computed according to the input and output dimension. 
-However, we will often want to initialize our weights
-according to various other protocols. 
 PyTorch's `nn.init` module provides a variety 
 of preset initialization methods.
-If we want to create a custom initializer,
-we need to do some extra work.
+:end_tab:
+
+:begin_tab:`tensorflow`
+By default, Keras initializes weight matrices uniformly by drawing from a range that is computed according to the input and output dimension, and the bias parameters are all set to $0$.
+TensorFlow provides a variety of initialization methods both in the root module and the `keras.initializers` module.
 :end_tab:
 
 ### Built-in Initialization
@@ -393,18 +358,15 @@ net.apply(init_normal)
 net[0].weight.data[0], net[0].bias.data[0]
 ```
 
-
 ```{.python .input}
 #@tab tensorflow 
 net = tf.keras.models.Sequential([
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(
-        4,
-        activation=tf.nn.relu,
+        4, activation=tf.nn.relu,
         kernel_initializer=tf.random_normal_initializer(mean=0, stddev=0.01),
         bias_initializer=tf.zeros_initializer()),
-    tf.keras.layers.Dense(1),
-])
+    tf.keras.layers.Dense(1)])
 
 net(x)
 net.weights[0], net.weights[1]
@@ -420,11 +382,11 @@ net[0].weight.data()[0]
 
 ```{.python .input}
 #@tab pytorch
-def init_normal(m):
+def init_constant(m):
     if type(m) == nn.Linear:
         nn.init.constant_(net[0].weight, 1)
         nn.init.zeros_(net[0].bias)
-net.apply(init_normal)    
+net.apply(init_constant)    
 net[0].weight.data[0], net[0].bias.data[0]
 ```
 
@@ -433,8 +395,7 @@ net[0].weight.data[0], net[0].bias.data[0]
 net = tf.keras.models.Sequential([
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(
-        4,
-        activation=tf.nn.relu,
+        4, activation=tf.nn.relu,
         kernel_initializer=tf.keras.initializers.Constant(1),
         bias_initializer=tf.zeros_initializer()),
     tf.keras.layers.Dense(1),
@@ -489,11 +450,10 @@ print(net.layers[1].weights[0])
 print(net.layers[2].weights[0])
 ```
 
-
 ### Custom Initialization
 
 Sometimes, the initialization methods we need 
-are not provided in the `init` module. 
+are not provided by the framework. 
 In the example below, we define an initializer
 for the following strange distribution:
 
@@ -508,16 +468,19 @@ $$
 $$
 
 :begin_tab:`mxnet`
-
 Here we define a subclass of `Initializer`. 
 Usually, we only need to implement the `_init_weight` function
 which takes a tensor argument (`data`) 
-and assigns to it the desired initialized values. 
-
+and assigns to it the desired initialized values.
 :end_tab:
 
 :begin_tab:`pytorch`
 Again, we implement a `my_init` function to apply to `net`.
+:end_tab:
+
+:begin_tab:`tensorflow`
+Here we define a subclass of `Initializer` and implement the `__call__` 
+function that return a desired tensor given the shape and data type.
 :end_tab:
 
 ```{.python .input}
@@ -562,8 +525,7 @@ print(net.layers[1].weights[0])
 ```
 
 Note that we always have the option 
-of setting parameters directly by calling `data` 
-to access the underlying data. 
+of setting parameters directly.
 
 :begin_tab:`mxnet`
 A note for advanced users: 
@@ -683,7 +645,7 @@ during backpropagation.
 ## Exercises
 
 1. Use the FancyMLP defined in :numref:`sec_model_construction` and access the parameters of the various layers.
-1. Look at the `init` module document to explore different initializers.
+1. Look at the initialization module document to explore different initializers.
 1. Construct a multilayer perceptron containing a shared parameter layer and train it. During the training process, observe the model parameters and gradients of each layer.
 1. Why is sharing parameters a good idea?
 
@@ -693,4 +655,8 @@ during backpropagation.
 
 :begin_tab:`pytorch`
 [Discussions](https://discuss.d2l.ai/t/57)
+:end_tab:
+
+:begin_tab:`tensorflow`
+[Discussions](https://discuss.d2l.ai/t/269)
 :end_tab:

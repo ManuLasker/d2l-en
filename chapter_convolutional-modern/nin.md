@@ -60,7 +60,6 @@ def nin_block(num_channels, kernel_size, strides, padding):
     return blk
 ```
 
-
 ```{.python .input}
 #@tab pytorch
 from d2l import torch as d2l
@@ -75,7 +74,6 @@ def nin_block(in_channels, out_channels, kernel_size, strides, padding):
         nn.Conv2d(out_channels, out_channels, kernel_size=1), nn.ReLU())
 ```
 
-
 ```{.python .input}
 #@tab tensorflow
 from d2l import tensorflow as d2l
@@ -83,9 +81,12 @@ import tensorflow as tf
 
 def nin_block(num_channels, kernel_size, strides, padding):
     return tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(num_channels, kernel_size, strides=strides, padding=padding, activation='relu'),
-        tf.keras.layers.Conv2D(num_channels, kernel_size=1, activation='relu'),
-        tf.keras.layers.Conv2D(num_channels, kernel_size=1, activation='relu')])
+        tf.keras.layers.Conv2D(num_channels, kernel_size, strides=strides,
+                               padding=padding, activation='relu'),
+        tf.keras.layers.Conv2D(num_channels, kernel_size=1,
+                               activation='relu'),
+        tf.keras.layers.Conv2D(num_channels, kernel_size=1,
+                               activation='relu')])
 ```
 
 ## NiN Model
@@ -125,7 +126,6 @@ net.add(nin_block(96, kernel_size=11, strides=4, padding=0),
         nn.Flatten())
 ```
 
-
 ```{.python .input}
 #@tab pytorch
 net = nn.Sequential(
@@ -154,6 +154,7 @@ def net():
         tf.keras.layers.Dropout(0.5),
         nin_block(10, kernel_size=3, strides=1, padding='same'),
         tf.keras.layers.GlobalAveragePooling2D(),
+        tf.keras.layers.Reshape((1, 1, 10)),
         tf.keras.layers.Flatten(),
         ])
 ```
@@ -167,7 +168,6 @@ for layer in net:
     X = layer(X)
     print(layer.name, 'output shape:\t', X.shape)
 ```
-
 
 ```{.python .input}
 #@tab pytorch
@@ -196,7 +196,6 @@ lr, num_epochs, batch_size = 0.1, 10, 128
 train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size, resize=224)
 d2l.train_ch6(net, train_iter, test_iter, num_epochs, lr)
 ```
-
 
 ```{.python .input}
 #@tab pytorch

@@ -81,7 +81,7 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
     set_figsize(figsize)
     axes = axes if axes else d2l.plt.gca()
 
-    # Return True if `X` (ndarray or list) has 1 axis
+    # Return True if `X` (tensor or list) has 1 axis
     def has_one_axis(X):
         return (hasattr(X, "ndim") and X.ndim == 1 or isinstance(X, list)
                 and not hasattr(X[0], "__len__"))
@@ -134,7 +134,7 @@ class Timer:  #@save
 
 # Defined in file: ./chapter_linear-networks/linear-regression-scratch.md
 def synthetic_data(w, b, num_examples):  #@save
-    """Generate y = X w + b + noise."""
+    """Generate y = Xw + b + noise."""
     X = np.random.normal(0, 1, (num_examples, len(w)))
     y = np.dot(X, w) + b
     y += np.random.normal(0, 0.01, y.shape)
@@ -159,7 +159,7 @@ def sgd(params, lr, batch_size):  #@save
 
 # Defined in file: ./chapter_linear-networks/linear-regression-concise.md
 def load_array(data_arrays, batch_size, is_train=True):  #@save
-    """Construct a Gluon data loader."""
+    """Construct a Gluon data iterator."""
     dataset = gluon.data.ArrayDataset(*data_arrays)
     return gluon.data.DataLoader(dataset, batch_size, shuffle=is_train)
 
@@ -177,7 +177,7 @@ def show_images(imgs, num_rows, num_cols, titles=None, scale=1.5):  #@save
     figsize = (num_cols * scale, num_rows * scale)
     _, axes = d2l.plt.subplots(num_rows, num_cols, figsize=figsize)
     axes = axes.flatten()
-    for i, (ax, img) in enumerate(zip(axes, imgs)):        
+    for i, (ax, img) in enumerate(zip(axes, imgs)):
         ax.imshow(d2l.numpy(img))
         ax.axes.get_xaxis().set_visible(False)
         ax.axes.get_yaxis().set_visible(False)
@@ -194,7 +194,7 @@ def get_dataloader_workers():  #@save
 
 # Defined in file: ./chapter_linear-networks/image-classification-dataset.md
 def load_data_fashion_mnist(batch_size, resize=None):  #@save
-    """Download the Fashion-MNIST dataset and then load into memory."""
+    """Download the Fashion-MNIST dataset and then load it into memory."""
     dataset = gluon.data.vision
     trans = [dataset.transforms.ToTensor()]
     if resize:
@@ -210,6 +210,7 @@ def load_data_fashion_mnist(batch_size, resize=None):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def accuracy(y_hat, y):  #@save
+    """Compute the number of correct predictions."""
     if len(y_hat.shape) > 1 and y_hat.shape[1] > 1:
         y_hat = y_hat.argmax(axis=1)
     return float((y_hat.astype(y.dtype) == y).sum())
@@ -217,7 +218,8 @@ def accuracy(y_hat, y):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def evaluate_accuracy(net, data_iter):  #@save
-    metric = Accumulator(2)  # num_corrected_examples, num_examples
+    """Compute the accuracy for a model on a dataset."""
+    metric = Accumulator(2)  # No. of correct predictions, no. of predictions
     for _, (X, y) in enumerate(data_iter):
         metric.add(accuracy(net(X), y), sum(y.shape))
     return metric[0] / metric[1]
@@ -225,12 +227,12 @@ def evaluate_accuracy(net, data_iter):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 class Accumulator:  #@save
-    """Sum a list of numbers over time."""
+    """For accumulating sums over `n` variables."""
     def __init__(self, n):
         self.data = [0.0] * n
 
     def add(self, *args):
-        self.data = [a+float(b) for a, b in zip(self.data, args)]
+        self.data = [a + float(b) for a, b in zip(self.data, args)]
 
     def reset(self):
         self.data = [0.0] * len(self.data)
@@ -241,7 +243,9 @@ class Accumulator:  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def train_epoch_ch3(net, train_iter, loss, updater):  #@save
-    metric = Accumulator(3)  # train_loss_sum, train_acc_sum, num_examples
+    """Train a model within one epoch (defined in Chapter 3)."""
+    # Sum of training loss, sum of training accuracy, no. of examples
+    metric = Accumulator(3)
     if isinstance(updater, gluon.Trainer):
         updater = updater.step
     for X, y in train_iter:
@@ -253,32 +257,39 @@ def train_epoch_ch3(net, train_iter, loss, updater):  #@save
         updater(X.shape[0])
         metric.add(float(l.sum()), accuracy(y_hat, y), y.size)
     # Return training loss and training accuracy
-    return metric[0]/metric[2], metric[1]/metric[2]
+    return metric[0] / metric[2], metric[1] / metric[2]
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 class Animator:  #@save
+    """For plotting data in animation."""
     def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None,
-                 ylim=None, xscale='linear', yscale='linear', fmts=None,
-                 nrows=1, ncols=1, figsize=(3.5, 2.5)):
-        """Incrementally plot multiple lines."""
-        if legend is None: legend = []
+                 ylim=None, xscale='linear', yscale='linear',
+                 fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
+                 figsize=(3.5, 2.5)):
+        # Incrementally plot multiple lines
+        if legend is None:
+            legend = []
         d2l.use_svg_display()
         self.fig, self.axes = d2l.plt.subplots(nrows, ncols, figsize=figsize)
-        if nrows * ncols == 1: self.axes = [self.axes, ]
-        # Use a lambda to capture arguments
+        if nrows * ncols == 1:
+            self.axes = [self.axes, ]
+        # Use a lambda function to capture arguments
         self.config_axes = lambda: d2l.set_axes(
             self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
         self.X, self.Y, self.fmts = None, None, fmts
 
     def add(self, x, y):
-        """Add multiple data points into the figure."""
-        if not hasattr(y, "__len__"): y = [y]
+        # Add multiple data points into the figure
+        if not hasattr(y, "__len__"):
+            y = [y]
         n = len(y)
-        if not hasattr(x, "__len__"): x = [x] * n
-        if not self.X: self.X = [[] for _ in range(n)]
-        if not self.Y: self.Y = [[] for _ in range(n)]
-        if not self.fmts: self.fmts = ['-'] * n
+        if not hasattr(x, "__len__"):
+            x = [x] * n
+        if not self.X:
+            self.X = [[] for _ in range(n)]
+        if not self.Y:
+            self.Y = [[] for _ in range(n)]
         for i, (a, b) in enumerate(zip(x, y)):
             if a is not None and b is not None:
                 self.X[i].append(a)
@@ -292,13 +303,18 @@ class Animator:  #@save
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
-def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater): #@save
+def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):  #@save
+    """Train a model (defined in Chapter 3)."""
     animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
                         legend=['train loss', 'train acc', 'test acc'])
     for epoch in range(num_epochs):
         train_metrics = train_epoch_ch3(net, train_iter, loss, updater)
         test_acc = evaluate_accuracy(net, test_iter)
-        animator.add(epoch+1, train_metrics+(test_acc,))
+        animator.add(epoch + 1, train_metrics + (test_acc,))
+    train_loss, train_acc = train_metrics
+    assert train_loss < 0.5, train_loss
+    assert train_acc <= 1 and train_acc > 0.7, train_acc
+    assert test_acc <= 1 and test_acc > 0.7, test_acc
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
@@ -307,7 +323,7 @@ def predict_ch3(net, test_iter, n=6):  #@save
         break
     trues = d2l.get_fashion_mnist_labels(y)
     preds = d2l.get_fashion_mnist_labels(net(X).argmax(axis=1))
-    titles = [true+'\n' + pred for true, pred in zip(trues, preds)]
+    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
     d2l.show_images(X[0:n].reshape(n, 28, 28), 1, n, titles=titles[0:n])
 
 
@@ -953,6 +969,7 @@ def predict_s2s_ch9(model, src_sentence, src_vocab, tgt_vocab, num_steps,
 
 # Defined in file: ./chapter_attention-mechanisms/attention.md
 def masked_softmax(X, valid_len):
+    """Perform softmax by filtering out some elements."""
     # X: 3-D tensor, valid_len: 1-D or 2-D tensor
     if valid_len is None:
         return npx.softmax(X)
@@ -974,10 +991,10 @@ class DotProductAttention(nn.Block):
         super(DotProductAttention, self).__init__(**kwargs)
         self.dropout = nn.Dropout(dropout)
 
-    # query: (batch_size, #queries, d)
-    # key: (batch_size, #kv_pairs, d)
-    # value: (batch_size, #kv_pairs, dim_v)
-    # valid_len: either (batch_size, ) or (batch_size, xx)
+    # `query`: (`batch_size`, #queries, `d`)
+    # `key`: (`batch_size`, #kv_pairs, `d`)
+    # `value`: (`batch_size`, #kv_pairs, `dim_v`)
+    # `valid_len`: either (`batch_size`, ) or (`batch_size`, xx)
     def forward(self, query, key, value, valid_len=None):
         d = query.shape[-1]
         # Set transpose_b=True to swap the last two dimensions of key
@@ -999,8 +1016,8 @@ class MLPAttention(nn.Block):
 
     def forward(self, query, key, value, valid_len):
         query, key = self.W_q(query), self.W_k(key)
-        # Expand query to (batch_size, #querys, 1, units), and key to
-        # (batch_size, 1, #kv_pairs, units). Then plus them with broadcast
+        # Expand query to (`batch_size`, #queries, 1, units), and key to
+        # (`batch_size`, 1, #kv_pairs, units). Then plus them with broadcast
         features = np.expand_dims(query, axis=2) + np.expand_dims(key, axis=1)
         features = np.tanh(features)
         scores = np.squeeze(self.v(features), axis=-1)
@@ -1020,45 +1037,47 @@ class MultiHeadAttention(nn.Block):
         self.W_o = nn.Dense(num_hiddens, use_bias=use_bias, flatten=False)
 
     def forward(self, query, key, value, valid_len):
-        # For self-attention, query, key, and value shape:
-        # (batch_size, seq_len, dim), where seq_len is the length of input
-        # sequence. valid_len shape is either (batch_size, ) or
-        # (batch_size, seq_len).
+        # For self-attention, `query`, `key`, and `value` shape:
+        # (`batch_size`, `seq_len`, `dim`), where `seq_len` is the length of
+        # input sequence. `valid_len` shape is either (`batch_size`, ) or
+        # (`batch_size`, `seq_len`).
 
-        # Project and transpose query, key, and value from
-        # (batch_size, seq_len, num_hiddens) to
-        # (batch_size * num_heads, seq_len, num_hiddens / num_heads).
+        # Project and transpose `query`, `key`, and `value` from
+        # (`batch_size`, `seq_len`, `num_hiddens`) to
+        # (`batch_size` * `num_heads`, `seq_len`, `num_hiddens` / `num_heads`)
         query = transpose_qkv(self.W_q(query), self.num_heads)
         key = transpose_qkv(self.W_k(key), self.num_heads)
         value = transpose_qkv(self.W_v(value), self.num_heads)
 
         if valid_len is not None:
-            # Copy valid_len by num_heads times
+            # Copy `valid_len` by `num_heads` times
             if valid_len.ndim == 1:
                 valid_len = np.tile(valid_len, self.num_heads)
             else:
                 valid_len = np.tile(valid_len, (self.num_heads, 1))
 
-        # For self-attention, output shape:
-        # (batch_size * num_heads, seq_len, num_hiddens / num_heads)
+        # For self-attention, `output` shape:
+        # (`batch_size` * `num_heads`, `seq_len`, `num_hiddens` / `num_heads`)
         output = self.attention(query, key, value, valid_len)
 
-        # output_concat shape: (batch_size, seq_len, num_hiddens)
+        # `output_concat` shape: (`batch_size`, `seq_len`, `num_hiddens`)
         output_concat = transpose_output(output, self.num_heads)
         return self.W_o(output_concat)
 
 
 # Defined in file: ./chapter_attention-mechanisms/transformer.md
 def transpose_qkv(X, num_heads):
-    # Input X shape: (batch_size, seq_len, num_hiddens).
-    # Output X shape:
-    # (batch_size, seq_len, num_heads, num_hiddens / num_heads)
+    # Input `X` shape: (`batch_size`, `seq_len`, `num_hiddens`).
+    # Output `X` shape:
+    # (`batch_size`, `seq_len`, `num_heads`, `num_hiddens` / `num_heads`)
     X = X.reshape(X.shape[0], X.shape[1], num_heads, -1)
 
-    # X shape: (batch_size, num_heads, seq_len, num_hiddens / num_heads)
+    # `X` shape:
+    # (`batch_size`, `num_heads`, `seq_len`, `num_hiddens` / `num_heads`)
     X = X.transpose(0, 2, 1, 3)
 
-    # output shape: (batch_size * num_heads, seq_len, num_hiddens / num_heads)
+    # `output` shape:
+    # (`batch_size` * `num_heads`, `seq_len`, `num_hiddens` / `num_heads`)
     output = X.reshape(-1, X.shape[2], X.shape[3])
     return output
 
@@ -1066,7 +1085,7 @@ def transpose_qkv(X, num_heads):
 
 # Defined in file: ./chapter_attention-mechanisms/transformer.md
 def transpose_output(X, num_heads):
-    # A reversed version of transpose_qkv
+    # A reversed version of `transpose_qkv`
     X = X.reshape(-1, num_heads, X.shape[1], X.shape[2])
     X = X.transpose(0, 2, 1, 3)
     return X.reshape(X.shape[0], X.shape[1], -1)
@@ -1100,7 +1119,7 @@ class PositionalEncoding(nn.Block):
     def __init__(self, num_hiddens, dropout, max_len=1000):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(dropout)
-        # Create a long enough P
+        # Create a long enough `P`
         self.P = np.zeros((1, max_len, num_hiddens))
         X = np.arange(0, max_len).reshape(-1, 1) / np.power(
             10000, np.arange(0, num_hiddens, 2) / num_hiddens)
@@ -1139,7 +1158,8 @@ class TransformerEncoder(d2l.Encoder):
         self.blks = nn.Sequential()
         for _ in range(num_layers):
             self.blks.add(
-                EncoderBlock(num_hiddens, ffn_num_hiddens, num_heads, dropout, use_bias))
+                EncoderBlock(num_hiddens, ffn_num_hiddens, num_heads, dropout,
+                             use_bias))
 
     def forward(self, X, valid_len, *args):
         X = self.pos_encoding(self.embedding(X) * math.sqrt(self.num_hiddens))
@@ -1171,7 +1191,7 @@ def train_2d(trainer, steps=20):
 # Defined in file: ./chapter_optimization/gd.md
 def show_trace_2d(f, results):
     """Show the trace of 2D variables during optimization."""
-    d2l.set_figsize((3.5, 2.5))
+    d2l.set_figsize()
     d2l.plt.plot(*zip(*results), '-o', color='#ff7f0e')
     x1, x2 = np.meshgrid(np.arange(-5.5, 1.0, 0.1), np.arange(-3.0, 1.0, 0.1))
     d2l.plt.contour(x1, x2, f(x1, x2), colors='#1f77b4')
@@ -1250,8 +1270,8 @@ def train_gluon_ch11(tr_name, hyperparams, data_iter, num_epochs=2):
 
 
 # Defined in file: ./chapter_computational-performance/hybridize.md
-class benchmark:    
-    def __init__(self, description = 'Done in %.4f sec'):
+class Benchmark:    
+    def __init__(self, description='Done'):
         self.description = description
         
     def __enter__(self):
@@ -1259,7 +1279,7 @@ class benchmark:
         return self
 
     def __exit__(self, *args):
-        print(self.description % self.timer.stop())
+        print(f'{self.description}: {self.timer.stop():.4f} sec')
 
 
 # Defined in file: ./chapter_computational-performance/multiple-gpus.md
@@ -2066,8 +2086,8 @@ def train_bert(train_iter, net, loss, vocab_size, ctx, log_interval,
     step, timer = 0, d2l.Timer()
     animator = d2l.Animator(xlabel='step', ylabel='loss',
                             xlim=[1, num_steps], legend=['mlm', 'nsp'])
-    # Masked language modeling loss, next sentence prediction loss,
-    # no. of sentence pairs, count
+    # Sum of masked language modeling losses, sum of next sentence prediction
+    # losses, no. of sentence pairs, count
     metric = d2l.Accumulator(4)
     num_steps_reached = False
     while step < num_steps and not num_steps_reached:

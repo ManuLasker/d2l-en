@@ -28,3 +28,5 @@ build/
 /chapter_deep-learning-computation/x-files
 .idea
 **data
+.vscode
+.pytest_cache

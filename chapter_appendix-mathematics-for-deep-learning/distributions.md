@@ -19,7 +19,7 @@ from IPython import display
 from math import erf, factorial
 import torch
 
-torch.pi = torch.acos(torch.zeros(1)) * 2  #define pi in torch
+torch.pi = torch.acos(torch.zeros(1)) * 2  # Define pi in torch
 ```
 
 ## Bernoulli
@@ -82,7 +82,7 @@ We can sample an array of arbitrary shape from a Bernoulli random variable as fo
 
 ```{.python .input}
 #@tab pytorch
-1*(torch.randn(10, 10) < p)
+1*(torch.rand(10, 10) < p)
 ```
 
 ## Discrete Uniform
@@ -215,7 +215,7 @@ We can sample an array of arbitrary shape from a uniform random variable as foll
 
 ```{.python .input}
 #@tab pytorch
-(b - a) * torch.randn(10, 10) + a
+(b - a) * torch.rand(10, 10) + a
 ```
 
 ## Binomial
@@ -369,8 +369,8 @@ d2l.plt.show()
 lam = 5.0
 
 xs = [i for i in range(20)]
-pmf = torch.tensor([torch.exp(torch.tensor(-lam)) 
-                * lam**k / factorial(k) for k in xs])
+pmf = torch.tensor([torch.exp(torch.tensor(-lam)) * lam**k
+                    / factorial(k) for k in xs])
 
 d2l.plt.stem(xs, pmf, use_line_collection=True)
 d2l.plt.xlabel('x')

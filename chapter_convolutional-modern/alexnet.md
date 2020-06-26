@@ -311,7 +311,6 @@ net.add(nn.Conv2D(96, kernel_size=11, strides=4, activation='relu'),
         nn.Dense(10))
 ```
 
-
 ```{.python .input}
 #@tab pytorch
 from d2l import torch as d2l
@@ -340,9 +339,6 @@ net = nn.Sequential(
 from d2l import tensorflow as d2l
 import tensorflow as tf
 
-# Note that this has to be a function that will be passed to `d2l.train_ch6()`
-# so that model building/compiling need to be within `strategy.scope()`
-# in order to utilize the CPU/GPU devices that we have.
 def net():
     return tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(filters=96, kernel_size=11, strides=4, activation='relu'),
@@ -358,7 +354,7 @@ def net():
         tf.keras.layers.Dropout(0.5),
         tf.keras.layers.Dense(4096, activation='relu'),
         tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(10, activation='sigmoid')
+        tf.keras.layers.Dense(10)
     ])
 ```
 
@@ -371,7 +367,6 @@ for layer in net:
     X = layer(X)
     print(layer.name, 'output shape:\t', X.shape)
 ```
-
 
 ```{.python .input}
 #@tab pytorch
@@ -403,19 +398,7 @@ but we do it here to be faithful to the AlexNet architecture).
 We perform this resizing with the `resize` argument in `load_data_fashion_mnist`.
 
 ```{.python .input}
-batch_size = 128
-train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size, resize=224)
-```
-
-
-```{.python .input}
-#@tab pytorch
-batch_size = 128
-train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size, resize=224)
-```
-
-```{.python .input}
-#@tab tensorflow
+#@tab all
 batch_size = 128
 train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size, resize=224)
 ```
@@ -429,19 +412,7 @@ and much slower training due to the deeper and wider network,
 the higher image resolution and the more costly convolutions.
 
 ```{.python .input}
-lr, num_epochs = 0.01, 10
-d2l.train_ch6(net, train_iter, test_iter, num_epochs, lr)
-```
-
-
-```{.python .input}
-#@tab pytorch
-lr, num_epochs = 0.01, 10
-d2l.train_ch6(net, train_iter, test_iter, num_epochs, lr)
-```
-
-```{.python .input}
-#@tab tensorflow
+#@tab all
 lr, num_epochs = 0.01, 10
 d2l.train_ch6(net, train_iter, test_iter, num_epochs, lr)
 ```
@@ -472,4 +443,8 @@ d2l.train_ch6(net, train_iter, test_iter, num_epochs, lr)
 
 :begin_tab:`pytorch`
 [Discussions](https://discuss.d2l.ai/t/76)
+:end_tab:
+
+:begin_tab:`tensorflow`
+[Discussions](https://discuss.d2l.ai/t/276)
 :end_tab:

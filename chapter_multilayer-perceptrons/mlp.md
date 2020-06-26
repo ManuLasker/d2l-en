@@ -44,7 +44,7 @@ assumption of *monotonicity*:
 that any increase in our feature must
 either always cause an increase in our model's output 
 (if the corresponding weight is positive),
-or always always cause a decrease in our model's output
+or always cause a decrease in our model's output
 (if the corresponding weight is negative).
 Sometimes that makes sense. 
 For example, if we were trying to predict 
@@ -123,7 +123,7 @@ as our linear predictor.
 This architecture is commonly called 
 a *multilayer perceptron*,
 often abbreviated as *MLP*.
-Below, we depict an MLP diagramtically (:numref:`fig_nlp`).
+Below, we depict an MLP diagrammatically (:numref:`fig_nlp`).
 
 ![Multilayer perceptron with hidden layers. This example contains a hidden layer with 5 hidden units in it. ](../img/mlp.svg)
 :label:`fig_nlp`

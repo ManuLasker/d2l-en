@@ -23,6 +23,7 @@ d2l = sys.modules[__name__]
 
 
 # Defined in file: ./chapter_preface/index.md
+import numpy as np
 import torch
 import torchvision
 from torch import nn
@@ -85,7 +86,7 @@ def plot(X, Y=None, xlabel=None, ylabel=None, legend=None, xlim=None,
     set_figsize(figsize)
     axes = axes if axes else d2l.plt.gca()
 
-    # Return True if `X` (ndarray or list) has 1 axis
+    # Return True if `X` (tensor or list) has 1 axis
     def has_one_axis(X):
         return (hasattr(X, "ndim") and X.ndim == 1 or isinstance(X, list)
                 and not hasattr(X[0], "__len__"))
@@ -138,7 +139,7 @@ class Timer:  #@save
 
 # Defined in file: ./chapter_linear-networks/linear-regression-scratch.md
 def synthetic_data(w, b, num_examples):  #@save
-    """Generate y = X w + b + noise."""
+    """Generate y = Xw + b + noise."""
     X = torch.zeros(size=(num_examples, len(w))).normal_()
     y = torch.matmul(X, w) + b
     y += torch.zeros(size=y.shape).normal_(std=0.01)
@@ -164,7 +165,7 @@ def sgd(params, lr, batch_size):  #@save
 
 # Defined in file: ./chapter_linear-networks/linear-regression-concise.md
 def load_array(data_arrays, batch_size, is_train=True):  #@save
-    """Construct a PyTorch data loader"""
+    """Construct a PyTorch data iterator."""
     dataset = data.TensorDataset(*data_arrays)
     return data.DataLoader(dataset, batch_size, shuffle=is_train)
 
@@ -182,7 +183,7 @@ def show_images(imgs, num_rows, num_cols, titles=None, scale=1.5):  #@save
     figsize = (num_cols * scale, num_rows * scale)
     _, axes = d2l.plt.subplots(num_rows, num_cols, figsize=figsize)
     axes = axes.flatten()
-    for i, (ax, img) in enumerate(zip(axes, imgs)):        
+    for i, (ax, img) in enumerate(zip(axes, imgs)):
         ax.imshow(d2l.numpy(img))
         ax.axes.get_xaxis().set_visible(False)
         ax.axes.get_yaxis().set_visible(False)
@@ -199,7 +200,7 @@ def get_dataloader_workers():  #@save
 
 # Defined in file: ./chapter_linear-networks/image-classification-dataset.md
 def load_data_fashion_mnist(batch_size, resize=None):  #@save
-    """Download the Fashion-MNIST dataset and then load into memory."""
+    """Download the Fashion-MNIST dataset and then load it into memory."""
     trans = [transforms.ToTensor()]
     if resize:
         trans.insert(0, transforms.Resize(resize))
@@ -216,6 +217,7 @@ def load_data_fashion_mnist(batch_size, resize=None):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def accuracy(y_hat, y):  #@save
+    """Compute the number of correct predictions."""
     if len(y_hat.shape) > 1 and y_hat.shape[1] > 1:
         y_hat = y_hat.argmax(axis=1)
     return float((y_hat.type(y.dtype) == y).sum())
@@ -223,7 +225,8 @@ def accuracy(y_hat, y):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def evaluate_accuracy(net, data_iter):  #@save
-    metric = Accumulator(2)  # num_corrected_examples, num_examples
+    """Compute the accuracy for a model on a dataset."""
+    metric = Accumulator(2)  # No. of correct predictions, no. of predictions
     for _, (X, y) in enumerate(data_iter):
         metric.add(accuracy(net(X), y), sum(y.shape))
     return metric[0] / metric[1]
@@ -231,12 +234,12 @@ def evaluate_accuracy(net, data_iter):  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 class Accumulator:  #@save
-    """Sum a list of numbers over time."""
+    """For accumulating sums over `n` variables."""
     def __init__(self, n):
         self.data = [0.0] * n
 
     def add(self, *args):
-        self.data = [a+float(b) for a, b in zip(self.data, args)]
+        self.data = [a + float(b) for a, b in zip(self.data, args)]
 
     def reset(self):
         self.data = [0.0] * len(self.data)
@@ -247,7 +250,9 @@ class Accumulator:  #@save
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 def train_epoch_ch3(net, train_iter, loss, updater):  #@save
-    metric = Accumulator(3)  # train_loss_sum, train_acc_sum, num_examples
+    """The training loop defined in Chapter 3."""
+    # Sum of training loss, sum of training accuracy, no. of examples
+    metric = Accumulator(3)
     for X, y in train_iter:
         # Compute gradients and update parameters
         y_hat = net(X)
@@ -262,32 +267,39 @@ def train_epoch_ch3(net, train_iter, loss, updater):  #@save
             updater(X.shape[0])
             metric.add(float(l.sum()), accuracy(y_hat, y), y.size().numel())
     # Return training loss and training accuracy
-    return metric[0]/metric[2], metric[1]/metric[2]
+    return metric[0] / metric[2], metric[1] / metric[2]
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
 class Animator:  #@save
+    """For plotting data in animation."""
     def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None,
-                 ylim=None, xscale='linear', yscale='linear', fmts=None,
-                 nrows=1, ncols=1, figsize=(3.5, 2.5)):
-        """Incrementally plot multiple lines."""
-        if legend is None: legend = []
+                 ylim=None, xscale='linear', yscale='linear',
+                 fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1,
+                 figsize=(3.5, 2.5)):
+        # Incrementally plot multiple lines
+        if legend is None:
+            legend = []
         d2l.use_svg_display()
         self.fig, self.axes = d2l.plt.subplots(nrows, ncols, figsize=figsize)
-        if nrows * ncols == 1: self.axes = [self.axes, ]
-        # Use a lambda to capture arguments
+        if nrows * ncols == 1:
+            self.axes = [self.axes, ]
+        # Use a lambda function to capture arguments
         self.config_axes = lambda: d2l.set_axes(
             self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
         self.X, self.Y, self.fmts = None, None, fmts
 
     def add(self, x, y):
-        """Add multiple data points into the figure."""
-        if not hasattr(y, "__len__"): y = [y]
+        # Add multiple data points into the figure
+        if not hasattr(y, "__len__"):
+            y = [y]
         n = len(y)
-        if not hasattr(x, "__len__"): x = [x] * n
-        if not self.X: self.X = [[] for _ in range(n)]
-        if not self.Y: self.Y = [[] for _ in range(n)]
-        if not self.fmts: self.fmts = ['-'] * n
+        if not hasattr(x, "__len__"):
+            x = [x] * n
+        if not self.X:
+            self.X = [[] for _ in range(n)]
+        if not self.Y:
+            self.Y = [[] for _ in range(n)]
         for i, (a, b) in enumerate(zip(x, y)):
             if a is not None and b is not None:
                 self.X[i].append(a)
@@ -301,13 +313,18 @@ class Animator:  #@save
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
-def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater): #@save
+def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):  #@save
+    """Train a model (defined in Chapter 3)."""
     animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
                         legend=['train loss', 'train acc', 'test acc'])
     for epoch in range(num_epochs):
         train_metrics = train_epoch_ch3(net, train_iter, loss, updater)
         test_acc = evaluate_accuracy(net, test_iter)
-        animator.add(epoch+1, train_metrics+(test_acc,))
+        animator.add(epoch + 1, train_metrics + (test_acc,))
+    train_loss, train_acc = train_metrics
+    assert train_loss < 0.5, train_loss
+    assert train_acc <= 1 and train_acc > 0.7, train_acc
+    assert test_acc <= 1 and test_acc > 0.7, test_acc
 
 
 # Defined in file: ./chapter_linear-networks/softmax-regression-scratch.md
@@ -316,7 +333,7 @@ def predict_ch3(net, test_iter, n=6):  #@save
         break
     trues = d2l.get_fashion_mnist_labels(y)
     preds = d2l.get_fashion_mnist_labels(net(X).argmax(axis=1))
-    titles = [true+'\n' + pred for true, pred in zip(trues, preds)]
+    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
     d2l.show_images(X[0:n].reshape(n, 28, 28), 1, n, titles=titles[0:n])
 
 
@@ -425,7 +442,7 @@ def corr2d(X, K):  #@save
 
 
 # Defined in file: ./chapter_convolutional-neural-networks/lenet.md
-def evaluate_accuracy_gpu(net, data_iter, device=None): #@save        
+def evaluate_accuracy_gpu(net, data_iter, device=None): #@save
     if not device:
         device = next(iter(net.parameters())).device
     metric = d2l.Accumulator(2)  # num_corrected_examples, num_examples
@@ -436,9 +453,9 @@ def evaluate_accuracy_gpu(net, data_iter, device=None): #@save
 
 
 # Defined in file: ./chapter_convolutional-neural-networks/lenet.md
-def train_ch6(net, train_iter, test_iter, num_epochs, lr, 
+def train_ch6(net, train_iter, test_iter, num_epochs, lr,
               device=d2l.try_gpu()):
-    """Train and evaluate a model with CPU or GPU."""    
+    """Train and evaluate a model with CPU or GPU."""
     def init_weights(m):
         if type(m) == nn.Linear or type(m) == nn.Conv2d:
             torch.nn.init.xavier_uniform_(m.weight)
@@ -454,9 +471,9 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr,
         metric = d2l.Accumulator(3)  # train_loss, train_acc, num_examples
         for i, (X, y) in enumerate(train_iter):
             timer.start()
-            net.train()            
+            net.train()
             optimizer.zero_grad()
-            X, y = X.to(device), y.to(device) 
+            X, y = X.to(device), y.to(device)
             y_hat = net(X)
             l = loss(y_hat, y)
             l.backward()
@@ -749,13 +766,15 @@ class EncoderDecoder(nn.Module):
 
 # Defined in file: ./chapter_attention-mechanisms/attention.md
 def masked_softmax(X, valid_len):
+    """Perform softmax by filtering out some elements."""
     # X: 3-D tensor, valid_len: 1-D or 2-D tensor
     if valid_len is None:
         return nn.functional.softmax(X, dim=-1)
     else:
         shape = X.shape
         if valid_len.dim() == 1:
-            valid_len = torch.repeat_interleave(valid_len, repeats=shape[1], dim=0)
+            valid_len = torch.repeat_interleave(valid_len, repeats=shape[1],
+                                                dim=0)
         else:
             valid_len = valid_len.reshape(-1)
         # Fill masked elements with a large negative, whose exp is 0
@@ -771,13 +790,13 @@ class DotProductAttention(nn.Module):
         super(DotProductAttention, self).__init__(**kwargs)
         self.dropout = nn.Dropout(dropout)
 
-    # query: (batch_size, #queries, d)
-    # key: (batch_size, #kv_pairs, d)
-    # value: (batch_size, #kv_pairs, dim_v)
-    # valid_len: either (batch_size, ) or (batch_size, xx)
+    # `query`: (`batch_size`, #queries, `d`)
+    # `key`: (`batch_size`, #kv_pairs, `d`)
+    # `value`: (`batch_size`, #kv_pairs, `dim_v`)
+    # `valid_len`: either (`batch_size`, ) or (`batch_size`, xx)
     def forward(self, query, key, value, valid_len=None):
         d = query.shape[-1]
-        # set transpose_b=True to swap the last two dimensions of key
+        # Set transpose_b=True to swap the last two dimensions of key
         scores = torch.bmm(query, key.transpose(1,2)) / math.sqrt(d)
         attention_weights = self.dropout(masked_softmax(scores, valid_len))
         return torch.bmm(attention_weights, value)
@@ -794,8 +813,8 @@ class MLPAttention(nn.Module):
 
     def forward(self, query, key, value, valid_len):
         query, key = self.W_k(query), self.W_q(key)
-        # expand query to (batch_size, #querys, 1, units), and key to
-        # (batch_size, 1, #kv_pairs, units). Then plus them with broadcast.
+        # Expand query to (`batch_size`, #queries, 1, units), and key to
+        # (`batch_size`, 1, #kv_pairs, units). Then plus them with broadcast
         features = query.unsqueeze(2) + key.unsqueeze(1)
         scores = self.v(features).squeeze(-1)
         attention_weights = self.dropout(masked_softmax(scores, valid_len))

@@ -405,13 +405,16 @@ class MySequential(nn.Module):
 class MySequential(tf.keras.Model):
     def __init__(self, *args):
         super().__init__()
-        self._modules = tf.keras.Sequential()
+        self.modules = []
         for block in args:
-            # Here, block is an instance of a Model subclass.
-            self._modules.add(block)
+            # Here, block is an instance of a
+            # tf.keras.layers.Layer subclass.
+            self.modules.append(block)
 
     def call(self, x):
-        return self._modules(x)
+        for module in self.modules:
+            x = module(x)
+        return x
 ```
 
 :begin_tab:`mxnet`
@@ -462,7 +465,7 @@ net(x)
 
 ```{.python .input}
 #@tab pytorch
-net = nn.Sequential(nn.Linear(20, 256), nn.ReLU(), nn.Linear(256, 10))
+net = MySequential(nn.Linear(20, 256), nn.ReLU(), nn.Linear(256, 10))
 net(x)
 ```
 
@@ -470,7 +473,7 @@ net(x)
 #@tab tensorflow
 net = MySequential(
     tf.keras.layers.Dense(units=256, activation=tf.nn.relu),
-    tf.keras.layers.Dense(10, activation=tf.nn.relu))
+    tf.keras.layers.Dense(10))
 net(x)
 ```
 
@@ -696,8 +699,11 @@ we worry that our extremely fast GPU(s)
 might have to wait until a puny CPU
 runs Python code before it gets another job to run.
 The best way to speed up Python is by avoiding it altogether.
+:end_tab:
+
+:begin_tab:`mxnet`
 One way that Gluon does this by allowing for
-Hybridization (:numref:`sec_hybridize`).
+hybridization (:numref:`sec_hybridize`).
 Here, the Python interpreter executes a Block
 the first time it is invoked.
 The Gluon runtime records what is happening

@@ -342,10 +342,10 @@ from mxnet import autograd, context, gluon, image, init, np, npx
 from mxnet.gluon import nn, rnn
 ```
 
-
 ```{.python .input  n=1}
 #@tab pytorch
 #@save
+import numpy as np
 import torch
 import torchvision
 from torch import nn
@@ -357,6 +357,7 @@ from torchvision import transforms
 ```{.python .input  n=1}
 #@tab tensorflow
 #@save
+import numpy as np
 import tensorflow as tf
 ```
 
@@ -406,7 +407,7 @@ Rahul Agarwal, Mohamed Ali Jamaoui, Michael (Stu) Stewart, Mike Müller,
 NRauschmayr, Prakhar Srivastav, sad-, sfermigier, Sheng Zha, sundeepteki,
 topecongiro, tpdi, vermicelli, Vishaal Kapoor, Vishwesh Ravi Shrimali, YaYaB, Yuhong Chen,
 Evgeniy Smirnov, lgov, Simon Corston-Oliver, Igor Dzreyev, Ha Nguyen, pmuens,
-alukovenko, senorcinco, vfdev-5, dsweet, Mohammad Mahdi Rahimi, Abhishek Gupta,
+Andrei Lukovenko, senorcinco, vfdev-5, dsweet, Mohammad Mahdi Rahimi, Abhishek Gupta,
 uwsd, DomKM, Lisa Oakley, Bowen Li, Aarush Ahuja, Prasanth Buddareddygari, brianhendee,
 mani2106, mtn, lkevinzc, caojilin, Lakshya, Fiete Lüer, Surbhi Vijayvargeeya,
 Muhyun Kim, dennismalmgren, adursun, Anirudh Dagar, liqingnz, Pedro Larroy,
@@ -418,10 +419,10 @@ Haibin Lin, jjangga0214, RichyChen, noelo, hansent, Giel Dops, dvincent1337, Whi
 Peter Kulits, codypenta, joseppinilla, ahmaurya, karolszk, heytitle, Peter Goetz, rigtorp,
 tiepvupsu, sfilip, mlxd, Kale-ab Tessera, Sanjar Adilov, MatteoFerrara, hsneto,
 Katarzyna Biesialska, Gregory Bruss, duythanhvn, paulaurel, graytowne, minhduc0711,
-sl7423, Jaedong Hwang, Yida Wang, cys4, clhm, JeanKaddour, austinmw, trebeljahr, tbaums,
+sl7423, Jaedong Hwang, Yida Wang, cys4, clhm, Jean Kaddour, austinmw, trebeljahr, tbaums,
 cuongvng, pavelkomarov, vzlamal, NotAnotherSystem, J-Arun-Mani, jancio, eldarkurtic,
 the-great-shazbot, doctorcolossus, gducharme, cclauss, Daniel-Mietchen, hoonose, biagiom,
-abhinavsp0730, jonathanhrandall, ysraell.
+abhinavsp0730, jonathanhrandall, ysraell, Nodar Okroshiashvili, UgurKap, Jiyang Kang.
 
 We thank Amazon Web Services, especially Swami Sivasubramanian,
 Raju Gulabani, Charlie Bell, and Andrew Jassy for their generous support in writing this book. Without the available time, resources, discussions with colleagues, and continuous encouragement this book would not have happened.

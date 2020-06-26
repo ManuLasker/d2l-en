@@ -74,7 +74,7 @@ subsampled = subsampling(sentences, vocab)
 Compare the sequence lengths before and after sampling, we can see subsampling significantly reduced the sequence length.
 
 ```{.python .input  n=5}
-d2l.set_figsize((3.5, 2.5))
+d2l.set_figsize()
 d2l.plt.hist([[len(line) for line in sentences],
               [len(line) for line in subsampled]])
 d2l.plt.xlabel('# tokens per sentence')
@@ -236,7 +236,7 @@ We use the `batchify` function just defined to specify the minibatch reading met
 
 ## Putting All Things Together
 
-Last, we define the `load_data_ptb` function that read the PTB dataset and return the data loader.
+Last, we define the `load_data_ptb` function that read the PTB dataset and return the data iterator.
 
 ```{.python .input  n=16}
 #@save
