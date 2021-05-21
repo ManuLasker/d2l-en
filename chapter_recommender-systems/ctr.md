@@ -62,9 +62,9 @@ class CTRDataset(gluon.data.Dataset):
         if self.feat_mapper is None and self.defaults is None:
             feat_mapper = {i: {feat for feat, c in cnt.items() if c >=
                                min_threshold} for i, cnt in feat_cnts.items()}
-            self.feat_mapper = {i: {feat: idx for idx, feat in enumerate(cnt)}
-                                for i, cnt in feat_mapper.items()}
-            self.defaults = {i: len(cnt) for i, cnt in feat_mapper.items()}
+            self.feat_mapper = {i: {feat_v: idx for idx, feat_v in enumerate(feat_values)}
+                                for i, feat_values in feat_mapper.items()}
+            self.defaults = {i: len(feat_values) for i, feat_values in feat_mapper.items()}
         for i, fm in self.feat_mapper.items():
             self.field_dims[i - 1] = len(fm) + 1
         self.offsets = np.array((0, *np.cumsum(self.field_dims).asnumpy()
@@ -92,9 +92,10 @@ As can be seen, all the 34 fields are categorical features. Each value represent
 * Click-through rate is an important metric that is used to measure the effectiveness of advertising systems and recommender systems.
 * Click-through rate prediction is usually converted to a binary classification problem. The target is to predict whether an ad/item will be clicked or not based on given features.
 
-## Exercise
+## Exercises
+
 * Can you load the Criteo and Avazu dataset with the provided `CTRDataset`. It is worth noting that the Criteo dataset consisting of real-valued features so you may have to revise the code a bit.
 
-## [Discussions](https://discuss.mxnet.io/t/5166)
-
-![](../img/qr_ctr.svg)
+:begin_tab:`mxnet`
+[Discussions](https://discuss.d2l.ai/t/405)
+:end_tab:

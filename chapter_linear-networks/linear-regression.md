@@ -36,14 +36,14 @@ Second, we assume that any noise is well-behaved
 To motivate the approach, let us start with a running example.
 Suppose that we wish to estimate the prices of houses (in dollars)
 based on their area (in square feet) and age (in years).
-To actually fit a model for predicting house prices,
+To actually develop a model for predicting house prices,
 we would need to get our hands on a dataset
 consisting of sales for which we know
 the sale price, area, and age for each home.
 In the terminology of machine learning,
 the dataset is called a *training dataset* or *training set*,
 and each row (here the data corresponding to one sale)
-is called an *example* (or *data instance*, *data point*, *sample*).
+is called an *example* (or *data point*, *data instance*, *sample*).
 The thing we are trying to predict (price)
 is called a *label* (or *target*).
 The independent variables (age and area)
@@ -52,12 +52,13 @@ are called *features* (or *covariates*).
 
 Typically, we will use $n$ to denote
 the number of examples in our dataset.
-We index the data instances by $i$, denoting each input
+We index the data examples by $i$, denoting each input
 as $\mathbf{x}^{(i)} = [x_1^{(i)}, x_2^{(i)}]^\top$
 and the corresponding label as $y^{(i)}$.
 
 
 ### Linear Model
+:label:`subsec_linear_model`
 
 The linearity assumption just says that the target (price)
 can be expressed as a weighted sum of the features (area and age):
@@ -74,13 +75,23 @@ what value the predicted price should take
 when all of the features take value 0.
 Even if we will never see any homes with zero area,
 or that are precisely zero years old,
-we still need the intercept or else we will
-limit the expressivity of our linear model.
+we still need the bias or else we will
+limit the expressivity of our model.
+Strictly speaking, :eqref:`eq_price-area` is an *affine transformation*
+of input features,
+which is characterized by
+a *linear transformation* of features via weighted sum, combined with
+a *translation* via the added bias.
 
 Given a dataset, our goal is to choose
 the weights $\mathbf{w}$ and the bias $b$ such that on average,
 the predictions made according to our model
 best fit the true prices observed in the data.
+Models whose output prediction
+is determined by the affine transformation of input features
+are *linear models*,
+where the affine transformation is specified by the chosen weights and bias.
+
 
 In disciplines where it is common to focus
 on datasets with just a few features,
@@ -99,7 +110,7 @@ we can express our model compactly using a dot product:
 $$\hat{y} = \mathbf{w}^\top \mathbf{x} + b.$$
 :eqlabel:`eq_linreg-y`
 
-In :eqref:`eq_linreg-y`, the vector $\mathbf{x}$ corresponds to features of a single data instance.
+In :eqref:`eq_linreg-y`, the vector $\mathbf{x}$ corresponds to features of a single data example.
 We will often find it convenient
 to refer to features of our entire dataset of $n$ examples
 via the *design matrix* $\mathbf{X} \in \mathbb{R}^{n \times d}$.
@@ -117,9 +128,9 @@ Given features of a training dataset $\mathbf{X}$
 and corresponding (known) labels $\mathbf{y}$,
 the goal of linear regression is to find
 the weight vector $\mathbf{w}$ and the bias term $b$
-that given features of a new data instance
+that given features of a new data example
 sampled from the same distribution as $\mathbf{X}$,
-the new data instance's label will (in expectation) be predicted with the lowest error.
+the new example's label will (in expectation) be predicted with the lowest error.
 
 
 Even if we believe that the best model for
@@ -142,7 +153,7 @@ and (ii) a procedure for updating the model to improve its quality.
 
 ### Loss Function
 
-Before we start thinking about how *to fit* our model,
+Before we start thinking about how to *fit* data with our model,
 we need to determine a measure of *fitness*.
 The *loss function* quantifies the distance
 between the *real* and *predicted* value of the target.
@@ -166,7 +177,7 @@ To make things more concrete, consider the example below
 where we plot a regression problem for a one-dimensional case
 as shown in :numref:`fig_fit_linreg`.
 
-![Fit data with a linear model.](../img/fit_linreg.svg)
+![Fit data with a linear model.](../img/fit-linreg.svg)
 :label:`fig_fit_linreg`
 
 Note that large differences between
@@ -250,7 +261,7 @@ To summarize, steps of the algorithm are the following:
 (i) we initialize the values of the model parameters, typically at random;
 (ii) we iteratively sample random minibatches from the data,
 updating the parameters in the direction of the negative gradient.
-For quadratic losses and linear functions,
+For quadratic losses and affine transformations,
 we can write this out explicitly as follows:
 
 $$\begin{aligned} \mathbf{w} &\leftarrow \mathbf{w} -   \frac{\eta}{|\mathcal{B}|} \sum_{i \in \mathcal{B}} \partial_{\mathbf{w}} l^{(i)}(\mathbf{w}, b) = \mathbf{w} - \frac{\eta}{|\mathcal{B}|} \sum_{i \in \mathcal{B}} \mathbf{x}^{(i)} \left(\mathbf{w}^\top \mathbf{x}^{(i)} + b - y^{(i)}\right),\\ b &\leftarrow b -  \frac{\eta}{|\mathcal{B}|} \sum_{i \in \mathcal{B}} \partial_b l^{(i)}(\mathbf{w}, b)  = b - \frac{\eta}{|\mathcal{B}|} \sum_{i \in \mathcal{B}} \left(\mathbf{w}^\top \mathbf{x}^{(i)} + b - y^{(i)}\right). \end{aligned}$$
@@ -322,9 +333,9 @@ when deep learning practitioners talk to statisticians.
 
 When training our models, we typically want to process
 whole minibatches of examples simultaneously.
-Doing this efficiently requires that we vectorize the calculations
+Doing this efficiently requires that (**we**) (~~should~~) (**vectorize the calculations
 and leverage fast linear algebra libraries
-rather than writing costly for-loops in Python.
+rather than writing costly for-loops in Python.**)
 
 ```{.python .input}
 %matplotlib inline
@@ -355,7 +366,7 @@ import time
 ```
 
 To illustrate why this matters so much,
-we can consider two methods for adding vectors.
+we can (**consider two methods for adding vectors.**)
 To start we instantiate two 10000-dimensional vectors
 containing all ones.
 In one method we will loop over the vectors with a Python for-loop.
@@ -369,7 +380,7 @@ b = d2l.ones(n)
 ```
 
 Since we will benchmark the running time frequently in this book,
-let us define a timer.
+[**let us define a timer**].
 
 ```{.python .input}
 #@tab all
@@ -402,8 +413,8 @@ class Timer:  #@save
 ```
 
 Now we can benchmark the workloads.
-First, we add them, one coordinate at a time,
-using a for-loop.
+First, [**we add them, one coordinate at a time,
+using a for-loop.**]
 
 ```{.python .input}
 #@tab mxnet, pytorch
@@ -423,7 +434,7 @@ for i in range(n):
 f'{timer.stop():.5f} sec'
 ```
 
-Alternatively, we rely on the reloaded `+` operator to compute the elementwise sum.
+(**Alternatively, we rely on the reloaded `+` operator to compute the elementwise sum.**)
 
 ```{.python .input}
 #@tab all
@@ -443,7 +454,7 @@ reducing the potential for errors.
 :label:`subsec_normal_distribution_and_squared_loss`
 
 While you can already get your hands dirty using only the information above,
-in the following we can more formally motivate the square loss objective
+in the following we can more formally motivate the squared loss objective
 via assumptions about the distribution of noise.
 
 Linear regression was invented by Gauss in 1795,
@@ -457,7 +468,7 @@ is given as
 
 $$p(x) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp\left(-\frac{1}{2 \sigma^2} (x - \mu)^2\right).$$
 
-Below we define a Python function to compute the normal distribution.
+Below [**we define a Python function to compute the normal distribution**].
 
 ```{.python .input}
 #@tab all
@@ -466,7 +477,7 @@ def normal(x, mu, sigma):
     return p * np.exp(-0.5 / sigma**2 * (x - mu)**2)
 ```
 
-We can now visualize the normal distributions.
+We can now (**visualize the normal distributions**).
 
 ```{.python .input}
 #@tab all
@@ -477,13 +488,13 @@ x = np.arange(-7, 7, 0.01)
 params = [(0, 1), (0, 2), (3, 1)]
 d2l.plot(x, [normal(x, mu, sigma) for mu, sigma in params], xlabel='x',
          ylabel='p(x)', figsize=(4.5, 2.5),
-         legend=['mean %d, std %d' % (mu, sigma) for mu, sigma in params])
+         legend=[f'mean {mu}, std {sigma}' for mu, sigma in params])
 ```
 
 As we can see, changing the mean corresponds to a shift along the $x$-axis,
 and increasing the variance spreads the distribution out, lowering its peak.
 
-One way to motivate linear regression with the mean squared error loss function (or simply square loss)
+One way to motivate linear regression with the mean squared error loss function (or simply squared loss)
 is to formally assume that observations arise from noisy observations,
 where the noise is normally distributed as follows:
 
@@ -526,7 +537,7 @@ of a linear model under the assumption of additive Gaussian noise.
 
 ## From Linear Regression to Deep Networks
 
-So far we only talked about linear functions.
+So far we only talked about linear models.
 While neural networks cover a much richer family of models,
 we can begin thinking of the linear model
 as a neural network by expressing it in the language of neural networks.
@@ -585,7 +596,7 @@ the *nucleus* (CPU), the *axon* (output wire),
 and the *axon terminals* (output terminals),
 enabling connections to other neurons via *synapses*.
 
-![The real neuron.](../img/Neuron.svg)
+![The real neuron.](../img/neuron.svg)
 :label:`fig_Neuron`
 
 Information $x_i$ arriving from other neurons
@@ -631,18 +642,17 @@ statistics, and computer science.
 ## Exercises
 
 1. Assume that we have some data $x_1, \ldots, x_n \in \mathbb{R}$. Our goal is to find a constant $b$ such that $\sum_i (x_i - b)^2$ is minimized.
-    * Find a analytic solution for the optimal value of $b$.
-    * How does this problem and its solution relate to the normal distribution?
+    1. Find a analytic solution for the optimal value of $b$.
+    1. How does this problem and its solution relate to the normal distribution?
 1. Derive the analytic solution to the optimization problem for linear regression with squared error. To keep things simple, you can omit the bias $b$ from the problem (we can do this in principled fashion by adding one column to $\mathbf X$ consisting of all ones).
-    * Write out the optimization problem in matrix and vector notation (treat all the data as a single matrix, and all the target values as a single vector).
-    * Compute the gradient of the loss with respect to $w$.
-    * Find the analytic solution by setting the gradient equal to zero and solving the matrix equation.
-    * When might this be better than using stochastic gradient descent? When might this method break?
+    1. Write out the optimization problem in matrix and vector notation (treat all the data as a single matrix, and all the target values as a single vector).
+    1. Compute the gradient of the loss with respect to $w$.
+    1. Find the analytic solution by setting the gradient equal to zero and solving the matrix equation.
+    1. When might this be better than using stochastic gradient descent? When might this method break?
 1. Assume that the noise model governing the additive noise $\epsilon$ is the exponential distribution. That is, $p(\epsilon) = \frac{1}{2} \exp(-|\epsilon|)$.
-    * Write out the negative log-likelihood of the data under the model $-\log P(\mathbf y \mid \mathbf X)$.
-    * Can you find a closed form solution?
-    * Suggest a stochastic gradient descent algorithm to solve this problem. What could possibly go wrong (hint: what happens near the stationary point as we keep on updating the parameters)? Can you fix this?
-
+    1. Write out the negative log-likelihood of the data under the model $-\log P(\mathbf y \mid \mathbf X)$.
+    1. Can you find a closed form solution?
+    1. Suggest a stochastic gradient descent algorithm to solve this problem. What could possibly go wrong (hint: what happens near the stationary point as we keep on updating the parameters)? Can you fix this?
 
 :begin_tab:`mxnet`
 [Discussions](https://discuss.d2l.ai/t/40)
